@@ -6,9 +6,10 @@ from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_input
+from pollination.alias.inputs.pit import point_in_time_metric_input
 from pollination.alias.inputs.radiancepar import rad_par_daylight_factor_input
 from pollination.alias.inputs.grid import sensor_count_input, grid_filter_input
-from pollination.alias.outputs.daylight import daylight_factor_results
+from pollination.alias.outputs.daylight import point_in_time_grid_results
 
 from ._raytracing import PointInTimeGridRayTracing
 
@@ -39,8 +40,9 @@ class PointInTimeGridEntryPoint(DAG):
     metric = Inputs.str(
         description='Text for the type of metric to be output from the calculation. '
         'Choose from: illuminance, irradiance, luminance, radiance.',
-        default='illuminance', spec={'type': 'string',
-        'enum': ['illuminance', 'irradiance', 'luminance', 'radiance']}
+        default='illuminance', alias=point_in_time_metric_input,
+        spec={'type': 'string', 'enum':
+        ['illuminance', 'irradiance', 'luminance', 'radiance']},
     )
 
     grid_filter = Inputs.str(
@@ -129,5 +131,5 @@ class PointInTimeGridEntryPoint(DAG):
     results = Outputs.folder(
         source='results', description='Folder with raw result files (.res) that contain '
         'numerical values for each sensor. Values are in standard SI units of the input '
-        'metric (lux, W/m2, cd/m2, W/m2-sr).', alias=daylight_factor_results
+        'metric (lux, W/m2, cd/m2, W/m2-sr).', alias=point_in_time_grid_results
     )

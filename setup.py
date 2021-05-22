@@ -21,7 +21,7 @@ setuptools.setup(
     setup_requires=['setuptools_scm'],
     url='https://github.com/pollination/point-in-time-grid',                   # will be translated to home
     project_urls={
-        'icon': 'https://raw.githubusercontent.com/ladybug-tools/artwork/master/icons_components/honeybee/png/dfrecipe.png',
+        'icon': 'https://raw.githubusercontent.com/ladybug-tools/artwork/master/icons_components/honeybee/png/gridrecipe.png',
         'docker': 'https://hub.docker.com/r/ladybugtools/honeybee-radiance'
     },
     description='Point-in-time grid-based recipe for Pollination.',                  # will be used as package description
