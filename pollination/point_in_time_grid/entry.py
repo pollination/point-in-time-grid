@@ -1,6 +1,6 @@
 from pollination_dsl.dag import Inputs, DAG, task, Outputs
 from dataclasses import dataclass
-from pollination.honeybee_radiance.sky import GenSky
+from pollination.honeybee_radiance.sky import GenSky, AdjustSkyForMetric
 from pollination.honeybee_radiance.octree import CreateOctreeWithSky
 from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
 
@@ -41,8 +41,8 @@ class PointInTimeGridEntryPoint(DAG):
         description='Text for the type of metric to be output from the calculation. '
         'Choose from: illuminance, irradiance, luminance, radiance.',
         default='illuminance', alias=point_in_time_metric_input,
-        spec={'type': 'string', 'enum':
-        ['illuminance', 'irradiance', 'luminance', 'radiance']},
+        spec={'type': 'string',
+              'enum': ['illuminance', 'irradiance', 'luminance', 'radiance']},
     )
 
     grid_filter = Inputs.str(
@@ -76,6 +76,18 @@ class PointInTimeGridEntryPoint(DAG):
             }
         ]
 
+    @task(
+        template=AdjustSkyForMetric,
+        needs=[generate_sky]
+    )
+    def adjust_sky(self, sky=generate_sky._outputs.sky, metric=metric):
+        return [
+            {
+                'from': AdjustSkyForMetric()._outputs.adjusted_sky,
+                'to': 'resources/weather.sky'
+            }
+        ]
+
     @task(template=CreateRadianceFolderGrid)
     def create_rad_folder(
         self, input_model=model, grid_filter=grid_filter
@@ -94,11 +106,11 @@ class PointInTimeGridEntryPoint(DAG):
         ]
 
     @task(
-        template=CreateOctreeWithSky, needs=[generate_sky, create_rad_folder]
+        template=CreateOctreeWithSky, needs=[adjust_sky, create_rad_folder]
     )
     def create_octree(
         self, model=create_rad_folder._outputs.model_folder,
-        sky=generate_sky._outputs.sky
+        sky=adjust_sky._outputs.adjusted_sky
     ):
         """Create octree from radiance folder and sky."""
         return [
@@ -113,7 +125,7 @@ class PointInTimeGridEntryPoint(DAG):
         needs=[create_rad_folder, create_octree],
         loop=create_rad_folder._outputs.sensor_grids,
         sub_folder='initial_results/{{item.name}}',  # create a subfolder for each grid
-        sub_paths={'sensor_grid': 'grid/{{item.full_id}}.pts'}  # sub_path for sensor_grid arg
+        sub_paths={'sensor_grid': 'grid/{{item.full_id}}.pts'}  # subpath for sensor_grid
     )
     def point_in_time_grid_ray_tracing(
         self,
