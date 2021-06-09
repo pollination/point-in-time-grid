@@ -27,8 +27,8 @@ setuptools.setup(
     description='Point-in-time grid-based recipe for Pollination.',                  # will be used as package description
     long_description=long_description,                                      # will be translated to ReadMe content on Pollination
     long_description_content_type="text/markdown",
-    maintainer='mostapha, ladybug-tools',                                   # Package maintainers. For multiple maintainers use comma
-    maintainer_email='mostapha@ladybug.tools, info@ladybug.tools',
+    maintainer='chris, ladybug-tools',                                   # Package maintainers. For multiple maintainers use comma
+    maintainer_email='chris@ladybug.tools, info@ladybug.tools',
     keywords='honeybee, radiance, ladybug-tools, illuminance, irradiance, point-in-time-grid',# will be used as keywords
     license='PolyForm Shield License 1.0.0, https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt',  # the license link should be separated by a comma
     zip_safe=False
