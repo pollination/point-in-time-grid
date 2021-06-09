@@ -26,7 +26,6 @@ class PointInTimeGridEntryPoint(DAG):
     )
 
     sky = Inputs.str(
-        default='cie 21 Jun 12:00 -lat 0 -lon 0 -tz 0 -type 0',
         description='Sky string for any type of sky (cie, climate-based, irradiance, '
         'illuminance). This can be a minimal representation of the sky through '
         'altitude and azimuth (eg. "cie -alt 71.6 -az 185.2 -type 0"). Or it can be '
