@@ -93,7 +93,14 @@ class PointInTimeGridEntryPoint(DAG):
             ):
         """Translate the input model to a radiance folder."""
         return [
-            {'from': CreateRadianceFolderGrid()._outputs.model_folder, 'to': 'model'},
+            {
+                'from': CreateRadianceFolderGrid()._outputs.model_folder,
+                'to': 'model'
+            },
+            {
+                'from': CreateRadianceFolderGrid()._outputs.bsdf_folder,
+                'to': 'model/bsdf'
+            },
             {
                 'from': CreateRadianceFolderGrid()._outputs.model_sensor_grids_file,
                 'to': 'results/grids_info.json'
@@ -133,7 +140,8 @@ class PointInTimeGridEntryPoint(DAG):
         metric=metric,
         octree_file=create_octree._outputs.scene_file,
         grid_name='{{item.full_id}}',
-        sensor_grid=create_rad_folder._outputs.model_folder
+        sensor_grid=create_rad_folder._outputs.model_folder,
+        bsdfs=create_rad_folder._outputs.bsdf_folder
     ):
         # this task doesn't return a file for each loop.
         # instead we access the results folder directly as an output

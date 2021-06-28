@@ -26,8 +26,9 @@ class PointInTimeGridRayTracing(DAG):
     metric = Inputs.str(
         description='Text for the type of metric to be output from the calculation. '
         'Choose from: illuminance, irradiance, luminance, radiance.',
-        default='illuminance', spec={'type': 'string',
-        'enum': ['illuminance', 'irradiance', 'luminance', 'radiance']}
+        default='illuminance',
+        spec={'type': 'string',
+              'enum': ['illuminance', 'irradiance', 'luminance', 'radiance']}
     )
 
     octree_file = Inputs.file(
@@ -43,6 +44,10 @@ class PointInTimeGridRayTracing(DAG):
     sensor_grid = Inputs.file(
         description='Sensor grid file.',
         extensions=['pts']
+    )
+
+    bsdfs = Inputs.folder(
+        description='Folder containing any BSDF files needed for ray tracing.'
     )
 
     @task(template=SplitGrid)
@@ -61,7 +66,8 @@ class PointInTimeGridRayTracing(DAG):
     )
     def ray_tracing(
         self, radiance_parameters=radiance_parameters, metric=metric,
-        grid=split_grid._outputs.output_folder, scene_file=octree_file
+        grid=split_grid._outputs.output_folder, scene_file=octree_file,
+        bsdf_folder=bsdfs
     ):
         return [
             {
