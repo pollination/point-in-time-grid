@@ -5,7 +5,7 @@ from pollination.honeybee_radiance.octree import CreateOctreeWithSky
 from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
 
 # input/output alias
-from pollination.alias.inputs.model import hbjson_model_input
+from pollination.alias.inputs.model import hbjson_model_grid_input
 from pollination.alias.inputs.pit import point_in_time_metric_input
 from pollination.alias.inputs.radiancepar import rad_par_daylight_factor_input
 from pollination.alias.inputs.grid import sensor_count_input, grid_filter_input
@@ -22,7 +22,7 @@ class PointInTimeGridEntryPoint(DAG):
     model = Inputs.file(
         description='A Honeybee model in HBJSON file format.',
         extensions=['json', 'hbjson'],
-        alias=hbjson_model_input
+        alias=hbjson_model_grid_input
     )
 
     sky = Inputs.str(
