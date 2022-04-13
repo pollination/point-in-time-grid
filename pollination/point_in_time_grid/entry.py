@@ -116,7 +116,7 @@ class PointInTimeGridEntryPoint(DAG):
             },
             {
                 'from': CreateRadianceFolderGrid()._outputs.model_sensor_grids_file,
-                'to': 'results/grids_info.json'
+                'to': 'results/pit/grids_info.json'
             },
             {
                 'from': CreateRadianceFolderGrid()._outputs.sensor_grids,
@@ -193,12 +193,12 @@ class PointInTimeGridEntryPoint(DAG):
         return [
             {
                 'from': MergeFolderData()._outputs.output_folder,
-                'to': 'results'
+                'to': 'results/pit'
             }
         ]
 
     results = Outputs.folder(
-        source='results', description='Folder with raw result files (.res) that contain '
-        'numerical values for each sensor. Values are in standard SI units of the input '
-        'metric (lux, W/m2, cd/m2, W/m2-sr).', alias=point_in_time_grid_results
+        source='results/pit', description='Folder with raw result files (.res) that '
+        'contain numerical values for each sensor. Values are in standard SI units of '
+        'the input metric (lux, W/m2, cd/m2, W/m2-sr).', alias=point_in_time_grid_results
     )
