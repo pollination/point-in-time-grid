@@ -2,8 +2,9 @@
 
 Point-in-time grid-based recipe for Pollination.
 
-Use this recipe to calculate illuminance, irradiance, luminance or radiance for
-a single point in time, given a HBJSON model and a sky condition.
+Use this recipe to calculate illuminance or irradiance for a single point in time,
+given a HBJSON model and a sky condition. This recipe can also compute luminance
+and radiance, though these will interpret the sensors as individual rays.
 
 Skies can be either CIE, ClimateBased/Custom, or for a specific
 Illuminance/Irradiance. This input can also just be a text definition
