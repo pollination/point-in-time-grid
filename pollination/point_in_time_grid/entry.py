@@ -5,6 +5,8 @@ from pollination.honeybee_radiance.octree import CreateOctreeWithSky
 from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
 from pollination.honeybee_radiance.grid import SplitGridFolder, MergeFolderData
 from pollination.honeybee_radiance.raytrace import RayTracingPointInTime
+from pollination.honeybee_radiance.post_process import PointInTimeConfig
+from pollination.honeybee_vtk.translate import Translate as TranslateVTKJS
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input
@@ -196,6 +198,35 @@ class PointInTimeGridEntryPoint(DAG):
                 'to': 'results/pit'
             }
         ]
+
+    @task(template=PointInTimeConfig)
+    def write_pit_config_file(self, folder='pit', metric=metric):
+        return [
+            {
+                'from': PointInTimeConfig()._outputs.cfg_file,
+                'to': 'results/config.json'
+            }
+        ]
+
+    @task(
+        template=TranslateVTKJS,
+        needs=[restructure_results, write_pit_config_file]
+    )
+    def create_vtkjs(
+        self, hbjson_file=model, file_type='vtkjs', grid_options='points',
+        data='results'
+    ):
+        return [
+            {
+                'from': TranslateVTKJS()._outputs.output_file,
+                'to': 'visualization/point_in_time.vtkjs'
+            }
+        ]
+
+    visualization = Outputs.file(
+        source='visualization/point_in_time.vtkjs',
+        description='Results visualization in 3D in vtkjs format.'
+    )
 
     results = Outputs.folder(
         source='results/pit', description='Folder with raw result files (.res) that '
