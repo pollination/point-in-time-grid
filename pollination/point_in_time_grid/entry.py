@@ -167,7 +167,7 @@ class PointInTimeGridEntryPoint(DAG):
         template=RayTracingPointInTime,
         needs=[create_rad_folder, split_grid_folder, create_octree],
         loop=split_grid_folder._outputs.sensor_grids,
-        sub_folder='initial_results/{{item.full_id}}',  # create a subfolder for each grid
+        sub_folder='initial_results/{{item.full_id}}',  # subfolder for each grid
         sub_paths={'grid': '{{item.full_id}}.pts'}  # subpath for sensor_grid
     )
     def point_in_time_grid_ray_tracing(
