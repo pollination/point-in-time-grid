@@ -213,7 +213,7 @@ class PointInTimeGridEntryPoint(DAG):
         needs=[restructure_results, write_pit_config_file]
     )
     def create_vtkjs(
-        self, hbjson_file=model, file_type='vtkjs', grid_options='points',
+        self, hbjson_file=model, file_type='vtkjs', grid_options='meshes',
         data='results'
     ):
         return [
