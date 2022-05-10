@@ -1,2 +1,2 @@
-pollination-honeybee-radiance==0.22.3
+pollination-honeybee-radiance==0.22.9
 pollination-alias==0.10.8
