@@ -132,15 +132,24 @@ class PointInTimeGridEntryPoint(DAG):
         needs=[point_in_time_grid_ray_tracing]
     )
     def post_process_point_in_time_grid(
-        self, results_folder='initial_results',
+        self, model=model, results_folder='initial_results',
         grids_info='resources/grids_info.json'
     ):
         return [
             {
                 'from': PointInTimeGridPostProcess()._outputs.results,
                 'to': 'results'
+            },
+            {
+                'from': PointInTimeGridPostProcess()._outputs.visualization,
+                'to': 'visualization.vsf'
             }
         ]
+
+    visualization = Outputs.file(
+        source='visualization.vsf',
+        description='Result visualization in VisualizationSet format.'
+    )
 
     results = Outputs.folder(
         source='results/pit', description='Folder with raw result files (.res) that '
