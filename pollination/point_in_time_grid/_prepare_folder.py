@@ -1,6 +1,10 @@
-from pollination_dsl.dag import Inputs, DAG, task, Outputs
+"""Prepare folder DAG for point-in-time Grid-based."""
+from pollination_dsl.dag import Inputs, GroupedDAG, task, Outputs
 from dataclasses import dataclass
-from pollination.honeybee_radiance.raytrace import RayTracingPointInTime
+from pollination.honeybee_radiance.sky import GenSky, AdjustSkyForMetric
+from pollination.honeybee_radiance.octree import CreateOctreeWithSky
+from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
+from pollination.honeybee_radiance.grid import SplitGridFolder
 
 # input/output alias
 from pollination.alias.inputs.model import hbjson_model_grid_input
@@ -8,14 +12,11 @@ from pollination.alias.inputs.pit import point_in_time_metric_input
 from pollination.alias.inputs.radiancepar import rad_par_daylight_factor_input
 from pollination.alias.inputs.grid import grid_filter_input, \
     min_sensor_count_input, cpu_count
-from pollination.alias.outputs.daylight import point_in_time_grid_results
 
-from ._prepare_folder import PointInTimeGridPrepareFolder
-from ._postprocess_results import PointInTimeGridPostProcess
 
 @dataclass
-class PointInTimeGridEntryPoint(DAG):
-    """Point-in-time grid-based entry point."""
+class PointInTimeGridPrepareFolder(GroupedDAG):
+    """Prepare folder for point-in-time-grid."""
 
     # inputs
     model = Inputs.file(
@@ -77,73 +78,95 @@ class PointInTimeGridEntryPoint(DAG):
         alias=rad_par_daylight_factor_input
     )
 
-    @task(template=PointInTimeGridPrepareFolder)
-    def prepare_folder_point_in_time_grid(
-        self, model=model, sky=sky, metric=metric, grid_filter=grid_filter,
-        cpu_count=cpu_count, min_sensor_count=min_sensor_count
-    ):
+    @task(template=GenSky)
+    def generate_sky(self, sky_string=sky):
         return [
             {
-                'from': PointInTimeGridPrepareFolder()._outputs.model_folder,
+                'from': GenSky()._outputs.sky,
+                'to': 'resources/weather.sky'
+            }
+        ]
+
+    @task(
+        template=AdjustSkyForMetric,
+        needs=[generate_sky]
+    )
+    def adjust_sky(self, sky=generate_sky._outputs.sky, metric=metric):
+        return [
+            {
+                'from': AdjustSkyForMetric()._outputs.adjusted_sky,
+                'to': 'resources/weather.sky'
+            }
+        ]
+
+    @task(template=CreateRadianceFolderGrid, annotations={'main_task': True})
+    def create_rad_folder(
+        self, input_model=model, grid_filter=grid_filter
+            ):
+        """Translate the input model to a radiance folder."""
+        return [
+            {
+                'from': CreateRadianceFolderGrid()._outputs.model_folder,
                 'to': 'model'
             },
             {
-                'from': PointInTimeGridPrepareFolder()._outputs.resources,
-                'to': 'resources'
+                'from': CreateRadianceFolderGrid()._outputs.bsdf_folder,
+                'to': 'model/bsdf'
             },
             {
-                'from': PointInTimeGridPrepareFolder()._outputs.initial_results,
-                'to': 'initial_results'
-            },
-            {
-                'from': PointInTimeGridPrepareFolder()._outputs.sensor_grids,
-                'description': 'Grid information.'
+                'from': CreateRadianceFolderGrid()._outputs.model_sensor_grids_file,
+                'to': 'resources/grids_info.json'
             }
         ]
 
     @task(
-        template=RayTracingPointInTime,
-        needs=[prepare_folder_point_in_time_grid],
-        loop=prepare_folder_point_in_time_grid._outputs.sensor_grids,
-        sub_folder='initial_results/{{item.full_id}}',  # subfolder for each grid
-        sub_paths={
-            'grid': 'grid/{{item.full_id}}.pts',
-            'scene_file': 'scene.oct',
-            'bsdf_folder': 'bsdf'
-        }
+        template=CreateOctreeWithSky, needs=[adjust_sky, create_rad_folder]
     )
-    def point_in_time_grid_ray_tracing(
-        self,
-        radiance_parameters=radiance_parameters,
-        metric=metric,
-        scene_file=prepare_folder_point_in_time_grid._outputs.resources,
-        grid=prepare_folder_point_in_time_grid._outputs.resources,
-        bsdf_folder=prepare_folder_point_in_time_grid._outputs.model_folder
+    def create_octree(
+        self, model=create_rad_folder._outputs.model_folder,
+        sky=adjust_sky._outputs.adjusted_sky
     ):
+        """Create octree from radiance folder and sky."""
         return [
             {
-                'from': RayTracingPointInTime()._outputs.result,
-                'to': '../{{item.name}}.res'
+                'from': CreateOctreeWithSky()._outputs.scene_file,
+                'to': 'resources/scene.oct'
             }
         ]
 
     @task(
-        template=PointInTimeGridPostProcess,
-        needs=[point_in_time_grid_ray_tracing]
+        template=SplitGridFolder, needs=[create_rad_folder],
+        sub_paths={'input_folder': 'grid'}
     )
-    def post_process_point_in_time_grid(
-        self, results_folder='initial_results',
-        grids_info='resources/grids_info.json'
+    def split_grid_folder(
+        self, input_folder=create_rad_folder._outputs.model_folder,
+        cpu_count=cpu_count, cpus_per_grid=1, min_sensor_count=min_sensor_count
     ):
+        """Split sensor grid folder based on the number of CPUs"""
         return [
             {
-                'from': PointInTimeGridPostProcess()._outputs.results,
-                'to': 'results'
+                'from': SplitGridFolder()._outputs.output_folder,
+                'to': 'resources/grid'
+            },
+            {
+                'from': SplitGridFolder()._outputs.dist_info,
+                'to': 'initial_results/_redist_info.json'
             }
         ]
 
-    results = Outputs.folder(
-        source='results/pit', description='Folder with raw result files (.res) that '
-        'contain numerical values for each sensor. Values are in standard SI units of '
-        'the input metric (lux, W/m2, cd/m2, W/m2-sr).', alias=point_in_time_grid_results
+    model_folder = Outputs.folder(
+        source='model', description='Input model folder folder.'
+    )
+
+    resources = Outputs.folder(
+        source='resources', description='Resources folder.'
+    )
+
+    initial_results = Outputs.folder(
+        source='initial_results', description='initial results folder.'
+    )
+
+    sensor_grids = Outputs.list(
+        source='resources/grid/_info.json',
+        description='Grid information JSON file.'
     )
