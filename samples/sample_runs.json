@@ -1,0 +1,9 @@
+[
+    {
+        "artifacts": {
+            "model": "artifacts/sample_model_small.hbjson",
+            "wea": "artifacts/Boston-Logan Intl AP_0_8759.wea"
+        },
+        "inputs": {}
+    }
+]
