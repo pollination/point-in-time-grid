@@ -79,6 +79,11 @@ jobs:
           echo $TAG
           queenbee
           pollination dsl push pollination-point-in-time-grid --tag $TAG -e https://api.staging.pollination.solutions -src https://api.staging.pollination.solutions/registries --push-dependencies
+      - name: Set Tag
+        id: set-tag
+        run: |
+          TAG=$(echo "${{ needs.deploy.outputs.tag }}" | sed 's/[[:space:]]//g')
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: install python dependencies for samples
         run: pip install -r samples/requirements.txt
       - name: run on staging
