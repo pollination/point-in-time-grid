@@ -6,8 +6,7 @@ from pollination.honeybee_radiance.raytrace import RayTracingPointInTime
 from pollination.alias.inputs.model import hbjson_model_grid_input
 from pollination.alias.inputs.pit import point_in_time_metric_input
 from pollination.alias.inputs.radiancepar import rad_par_daylight_factor_input
-from pollination.alias.inputs.grid import grid_filter_input, \
-    min_sensor_count_input, cpu_count
+from pollination.alias.inputs.grid import grid_filter_input, cpu_count
 from pollination.alias.outputs.daylight import point_in_time_grid_results
 
 from ._prepare_folder import PointInTimeGridPrepareFolder
@@ -65,10 +64,9 @@ class PointInTimeGridEntryPoint(DAG):
         'redistributing the sensors based on cpu_count. This value takes '
         'precedence over the cpu_count and can be used to ensure that '
         'the parallelization does not result in generating unnecessarily small '
-        'sensor grids. The default value is set to 1, which means that the '
-        'cpu_count is always respected.', default=500,
-        spec={'type': 'integer', 'minimum': 1},
-        alias=min_sensor_count_input
+        'sensor grids.',
+        default=1000, default_local=500,
+        spec={'type': 'integer', 'minimum': 1}
     )
 
     radiance_parameters = Inputs.str(
