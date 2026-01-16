@@ -107,8 +107,9 @@ class PointInTimeGridEntryPoint(DAG):
         sub_paths={
             'grid': 'grid/{{item.full_id}}.pts',
             'scene_file': 'scene.oct',
-            'bsdf_folder': 'bsdf'
-        }
+            'bsdf_folder': 'bsdf',
+            'ies_folder': 'ies'
+            }
     )
     def point_in_time_grid_ray_tracing(
         self,
@@ -116,7 +117,8 @@ class PointInTimeGridEntryPoint(DAG):
         metric=metric,
         scene_file=prepare_folder_point_in_time_grid._outputs.resources,
         grid=prepare_folder_point_in_time_grid._outputs.resources,
-        bsdf_folder=prepare_folder_point_in_time_grid._outputs.model_folder
+        bsdf_folder=prepare_folder_point_in_time_grid._outputs.model_folder,
+        ies_folder=prepare_folder_point_in_time_grid._outputs.model_folder
     ):
         return [
             {
