@@ -2,7 +2,7 @@
 from pollination_dsl.dag import Inputs, GroupedDAG, task, Outputs
 from dataclasses import dataclass
 from pollination.honeybee_radiance.sky import GenSky, AdjustSkyForMetric
-from pollination.honeybee_radiance.octree import CreateOctreeWithSky
+from pollination.honeybee_radiance.octree import CreateOctreeWithSkyStatic
 from pollination.honeybee_radiance.translate import CreateRadianceFolderGrid
 from pollination.honeybee_radiance.grid import SplitGridFolder
 
@@ -120,16 +120,17 @@ class PointInTimeGridPrepareFolder(GroupedDAG):
         ]
 
     @task(
-        template=CreateOctreeWithSky, needs=[adjust_sky, create_rad_folder]
+        template=CreateOctreeWithSkyStatic, needs=[adjust_sky, create_rad_folder]
     )
     def create_octree(
         self, model=create_rad_folder._outputs.model_folder,
-        sky=adjust_sky._outputs.adjusted_sky
+        sky=adjust_sky._outputs.adjusted_sky,
+        include_ies='include'
     ):
         """Create octree from radiance folder and sky."""
         return [
             {
-                'from': CreateOctreeWithSky()._outputs.scene_file,
+                'from': CreateOctreeWithSkyStatic()._outputs.scene_file,
                 'to': 'resources/scene.oct'
             }
         ]
